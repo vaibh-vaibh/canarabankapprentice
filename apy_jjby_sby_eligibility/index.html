@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>Sarkari Scheme Eligibility</title>
+    <link rel="icon" href="./india.png">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 380px; text-align: center; }
+        input { width: 85%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 18px; margin-bottom: 20px; outline: none; }
+        button { background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; transition: 0.3s; }
+        button:hover { background: #218838; }
+        #result { margin-top: 25px; text-align: left; border-top: 1px solid #eee; padding-top: 15px; }
+        .scheme { padding: 10px; margin: 8px 0; border-radius: 5px; font-weight: 500; font-size: 15px; }
+        .yes { background-color: #d4edda; color: #155724; border-left: 5px solid #28a745; }
+        .no { background-color: #f8d7da; color: #721c24; border-left: 5px solid #dc3545; }
+        .summary-box { margin-top: 15px; font-weight: bold; font-size: 16px; color: #333; text-align: center; padding: 12px; background: #e9ecef; border-radius: 8px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="color:#0056b3;">Scheme Eligibility 🇮🇳</h2>
+    <p>Apna Janm ka Saal (Year) likhein:</p>
+    <input type="number" id="birthYear" placeholder="Eg: 2005" min="1900" max="2026">
+    <button onclick="checkEligibility()">Eligibility Check Karein</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+function checkEligibility() {
+    let bYear = parseInt(document.getElementById('birthYear').value);
+    let resultDiv = document.getElementById('result');
+    
+    if (isNaN(bYear) || bYear > 2026 || bYear < 1900) {
+        alert("Kripya sahi saal (Year) bhariye!");
+        return;
+    }
+
+    // February 2026 ke hisaab se calculation
+    let currentYear = 2026;
+    let age = currentYear - bYear; 
+    
+    let count = 0;
+    let html = `<b>Aapki Anumanit Umar: ${age} saal</b><br>`;
+
+    // 1. PMJJBY (18-50 Years) [Source: Financial Services GoI]
+    if (age >= 18 && age <= 50) {
+        html += `<div class="scheme yes">✅ PMJJBY: Eligible (Life Insurance)</div>`;
+        count++;
+    } else {
+        html += `<div class="scheme no">❌ PMJJBY: Not Eligible (Age 18-50 required)</div>`;
+    }
+
+    // 2. PMSBY (18-70 Years) [Source: Jan Suraksha]
+    if (age >= 18 && age <= 70) {
+        html += `<div class="scheme yes">✅ PMSBY: Eligible (Accident Insurance)</div>`;
+        count++;
+    } else {
+        html += `<div class="scheme no">❌ PMSBY: Not Eligible (Age 18-70 required)</div>`;
+    }
+
+    // 3. APY (18-40 Years) [Source: PFRDA]
+    if (age >= 18 && age <= 40) {
+        html += `<div class="scheme yes">✅ APY: Eligible (Monthly Pension)</div>`;
+        count++;
+    } else {
+        html += `<div class="scheme no">❌ APY: Not Eligible (Age 18-40 required)</div>`;
+    }
+
+    // Logic for 1, 2, or 3 schemes
+    let message = "";
+    if (count === 3) {
+        message = "🎉 Aap teeno (3) schemes ke liye eligible hain!";
+    } else if (count === 2) {
+        message = "💡 Aap 2 schemes ke liye eligible hain.";
+    } else if (count === 1) {
+        message = "✅ Aap sirf 1 scheme ke liye eligible hain.";
+    } else {
+        message = "⚠️ Aap filhal kisi scheme ke liye eligible nahi hain.";
+    }
+
+    html += `<div class="summary-box">${message}</div>`;
+    resultDiv.innerHTML = html;
+}
+</script>
+
+</body>
+</html>
