@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canara Bank Deposit</title>
+    <link rel="icon" href="./canara.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --canara-blue: #0076be; --canara-yellow: #ffcb05; }
+        body { background: #f8f9fa; font-family: 'Segoe UI', Roboto, sans-serif; color: #333; }
+        .master-card { border: none; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); overflow: hidden; background: white; }
+        .header { background: var(--canara-blue); color: white; padding: 30px; text-align: center; border-bottom: 5px solid var(--canara-yellow); }
+        .input-label { font-weight: 700; font-size: 0.85rem; color: var(--canara-blue); text-transform: uppercase; margin-bottom: 5px; }
+        .res-section { background: #fff; border-radius: 15px; padding: 20px; border: 1px solid #e0e0e0; height: 100%; }
+        .highlight-amt { font-size: 1.8rem; font-weight: 800; color: #2e7d32; }
+        .instr-box { background: #fff; border-left: 6px solid #d32f2f; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .badge-custom { font-size: 0.7rem; padding: 5px 10px; }
+        .table-custom { font-size: 0.9rem; }
+        .sticky-header { position: sticky; top: 0; background: white; z-index: 10; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="master-card">
+        <div class="header">
+            <h1 class="h3 fw-bold mb-1">CANARA BANK - ALL-IN-ONE DEPOSIT CALCULATOR</h1>
+            <p class="mb-0 opacity-75">Updated as per RBI Format & PDF Rates (w.e.f. 05.01.2026 & 07.03.2026)</p>
+        </div>
+
+        <div class="p-4">
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="input-label">Deposit Scheme</label>
+                    <select id="mode" class="form-select shadow-sm" onchange="updateUI()">
+                        <option value="FD">Fixed Deposit (Lumpsum)</option>
+                        <option value="RD">Recurring Deposit (Monthly)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="input-label">Account Category</label>
+                    <select id="accType" class="form-select shadow-sm" onchange="updateUI()">
+                        <option value="DOM">Domestic Resident</option>
+                        <option value="NRO">NRO (Non-Resident Ordinary)</option>
+                        <option value="NRE">NRE (Non-Resident External)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="input-label">Age Group</label>
+                    <select id="age" class="form-select shadow-sm">
+                        <option value="GEN">General Public (< 60)</option>
+                        <option value="SR">Senior Citizen (60 - 80)</option>
+                        <option value="SSR">Super Senior (80+)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="input-label">Withdrawal Type</label>
+                    <select id="callable" class="form-select shadow-sm">
+                        <option value="C">Callable (Standard)</option>
+                        <option value="NC">Non-Callable (No Premature)</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label id="amtLabel" class="input-label">Investment Amount (₹)</label>
+                    <input type="number" id="principal" class="form-control shadow-sm" placeholder="e.g. 100000">
+                </div>
+                <div class="col-md-4">
+                    <label class="input-label">Tenure (PDF Based Slabs)</label>
+                    <select id="tenure" class="form-select shadow-sm">
+                        <option value="45">7 Days to 45 Days</option>
+                        <option value="90">46 Days to 90 Days</option>
+                        <option value="179">91 Days to 179 Days</option>
+                        <option value="269">180 Days to 269 Days</option>
+                        <option value="364">270 Days to < 1 Year</option>
+                        <option value="365">1 Year Only</option>
+                        <option value="444">444 Days (Special)</option>
+                        <option value="555">555 Days (Special)</option>
+                        <option value="729">Above 1 Yr to < 2 Yrs</option>
+                        <option value="1094">2 Yrs to < 3 Yrs</option>
+                        <option value="1824">3 Yrs to < 5 Yrs</option>
+                        <option value="3650">5 Yrs to 10 Yrs</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="input-label">Tax Documentation</label>
+                    <select id="taxDoc" class="form-select shadow-sm">
+                        <option value="PAN_YES">PAN Provided (10% TDS)</option>
+                        <option value="PAN_NO">No PAN Provided (20% TDS)</option>
+                        <option value="FORM_YES">Form 15G/15H Submitted (0% TDS)</option>
+                    </select>
+                </div>
+                <div class="col-12 mt-4">
+                    <button class="btn btn-primary w-100 fw-bold py-2 shadow" onclick="masterCalculate()">CALCULATE EVERYTHING</button>
+                </div>
+            </div>
+
+            <div id="resultArea" class="row g-4 d-none">
+                <div class="col-lg-5">
+                    <div class="res-section">
+                        <h5 class="fw-bold border-bottom pb-2">Maturity Details</h5>
+                        <div class="d-flex justify-content-between mb-2"><span>Interest Rate (ROI):</span><span class="fw-bold text-primary" id="res_roi">0%</span></div>
+                        <div class="d-flex justify-content-between mb-2"><span>Total Interest (Gross):</span><span class="fw-bold" id="res_gross">₹0</span></div>
+                        <div class="d-flex justify-content-between mb-2"><span>TDS Deduction:</span><span class="fw-bold text-danger" id="res_tds">- ₹0</span></div>
+                        <hr>
+                        <div class="text-center py-2">
+                            <span class="d-block small text-muted">Final Maturity Amount</span>
+                            <span class="highlight-amt" id="res_net">₹0</span>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6 class="fw-bold small">SI vs CI Profit Table</h6>
+                            <table class="table table-sm table-bordered bg-light">
+                                <tr><td>Simple Interest (SI)</td><td id="res_si" class="text-end">₹0</td></tr>
+                                <tr class="table-success"><td>Compound Interest (CI)</td><td id="res_ci" class="text-end fw-bold">₹0</td></tr>
+                                <tr><td class="fw-bold">Your Compounding Gain</td><td id="res_gain" class="text-end text-success fw-bold">₹0</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="res-section">
+                        <h5 class="fw-bold border-bottom pb-2">Quarterly Re-investment Growth</h5>
+                        <div class="table-responsive" style="max-height: 380px;">
+                            <table class="table table-sm table-hover table-custom">
+                                <thead class="table-dark sticky-header">
+                                    <tr><th>Period</th><th>Opening Balance</th><th>Interest Added</th><th>Closing Balance</th></tr>
+                                </thead>
+                                <tbody id="breakup_body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5">
+                <div class="instr-box">
+                    <h5 class="fw-bold text-danger mb-3">📌 MASTER INSTRUCTIONS & OFFICIAL RULES (PDF DATA)</h5>
+                    <div class="row g-4">
+                        <div class="col-md-4 border-end">
+                            <h6 class="fw-bold text-primary">1. FD/RD Interest Rules</h6>
+                            <ul class="small ps-3">
+                                <li><b>Compounding:</b> Quarterly compounded basis par interest calculate hota hai.</li>
+                                <li><b>RD Logic:</b> RD par bhi wahi rates apply hote hain jo FD par hain.</li>
+                                <li><b>Minimum Tenure:</b> ₹5 Lakh se kam FD ke liye minimum 15 din, usse upar 7 din.</li>
+                                <li><b>NRE Rules:</b> Minimum 1 saal tenure zaroori hai interest ke liye, warna 0% interest milega.</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4 border-end">
+                            <h6 class="fw-bold text-primary">2. Age Criteria & Bonuses</h6>
+                            <ul class="small ps-3">
+                                <li><b>Senior Citizens:</b> 180 Days & above par extra <b>0.50%</b> interest.</li>
+                                <li><b>Super Seniors (80+):</b> Sirf "Canara 444" aur "Canara 555" par extra <b>0.60%</b> milta hai.</li>
+                                <li><b>Non-Callable:</b> ₹1 Cr se upar ke deposits par premature allowed nahi hai par interest rates zyada hain.</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="fw-bold text-primary">3. Tax & Penalty (Hisaab)</h6>
+                            <ul class="small ps-3">
+                                <li><b>TDS Limit:</b> ₹40k (Senior ₹50k) interest par TDS kategi. NRO par flat <b>31.2%</b> tax hai.</li>
+                                <li><b>PAN Effect:</b> PAN nahi hone par <b>20% TDS</b> kategi, PAN hone par 10%.</li>
+                                <li><b>Form 15G/H:</b> 15G (60 saal se kam) aur 15H (60 saal ya usse adhik) mein bharna zaroori hai tax bachane ke liye.</li>
+                                <li><b>Penalty:</b> Premature closure par <b>1.00%</b> ki penalty rate se kam karke di jayegi.</li>
+                                <li><b>Callable:</b> Ye wo FD hoti hai jise aap waqt se pehle (prematurely) tudwa sakte hain.</li>
+                                <li><b>Non-Callable:</b> ₹1 Cr se upar ke deposits par premature allowed nahi hai par interest rates zyada hain.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateUI() {
+    const mode = document.getElementById('mode').value;
+    const acc = document.getElementById('accType').value;
+    document.getElementById('amtLabel').innerText = (mode === 'FD') ? "Investment Amount (₹)" : "Monthly Installment (₹)";
+    
+    // NRE Logic
+    if(acc === 'NRE') {
+        document.getElementById('taxDoc').innerHTML = '<option value="FORM_YES">NRE Tax Free (0% TDS)</option>';
+        document.getElementById('age').value = "GEN"; // NRE usually doesn't give senior bonus in most slabs
+    } else {
+        document.getElementById('taxDoc').innerHTML = `
+            <option value="PAN_YES">PAN Provided (10% TDS)</option>
+            <option value="PAN_NO">No PAN Provided (20% TDS)</option>
+            <option value="FORM_YES">Form 15G/15H Submitted (0% TDS)</option>`;
+    }
+}
+
+function masterCalculate() {
+    const mode = document.getElementById('mode').value;
+    const acc = document.getElementById('accType').value;
+    const age = document.getElementById('age').value;
+    const call = document.getElementById('callable').value;
+    const p = parseFloat(document.getElementById('principal').value);
+    const days = parseInt(document.getElementById('tenure').value);
+    const taxDoc = document.getElementById('taxDoc').value;
+
+    if(!p || isNaN(p)) { alert("Kripya Amount sahi bhariye!"); return; }
+
+    // --- LOGIC: RATE SELECTION (FROM PDF PAGE 2) ---
+    let rate = 6.25; 
+    if(call === 'C') {
+        if(days <= 45) rate = 3.00;
+        else if(days <= 90) rate = 4.00;
+        else if(days <= 179) rate = 4.25;
+        else if(days <= 269) rate = 5.25;
+        else if(days <= 364) rate = 5.50;
+        else if(days === 365) rate = 6.25;
+        else if(days === 444) rate = 6.45;
+        else if(days === 555) rate = 6.50;
+    } else {
+        // Non-Callable
+        if(days <= 90) rate = 4.10;
+        else if(days <= 179) rate = 4.35;
+        else if(days <= 269) rate = 5.35;
+        else if(days <= 364) rate = 5.60;
+        else if(days === 444) rate = 6.55;
+        else if(days === 555) rate = 6.60;
+        else rate = 6.35;
+    }
+
+    // Bonuses (Domestic/NRO only)
+    if(acc !== 'NRE' && days >= 180) {
+        if(age === 'SR') rate += 0.50;
+        if(age === 'SSR') {
+            if(days === 444 || days === 555) rate += 0.60;
+            else rate += 0.50;
+        }
+    }
+
+    // NRE Penalty (No interest if < 1 year)
+    if(acc === 'NRE' && days < 365) rate = 0;
+
+    let grossInt = 0, maturity = 0, si = 0, tableRows = "";
+    let timeYears = days/365;
+
+    if(mode === 'FD') {
+        let quarters = Math.ceil(timeYears * 4);
+        let currentP = p;
+        for(let i=1; i<=quarters; i++) {
+            let qInt = currentP * (rate/100/4);
+            let open = currentP;
+            currentP += qInt;
+            tableRows += `<tr><td>Quarter ${i}</td><td>₹${open.toFixed(0)}</td><td>₹${qInt.toFixed(0)}</td><td>₹${currentP.toFixed(0)}</td></tr>`;
+        }
+        maturity = currentP;
+        grossInt = maturity - p;
+        si = p * (rate/100) * timeYears;
+    } else {
+        // RD Quarterly Compounding Formula
+        let months = Math.floor(days/30);
+        let r = rate/100;
+        maturity = p * (Math.pow(1 + r/4, months/3) - 1) / (1 - Math.pow(1 + r/4, -1/3));
+        grossInt = maturity - (p * months);
+        si = (p * months * (months + 1) * r) / (2 * 12);
+        tableRows = "<tr><td colspan='4' class='text-center'>Detailed RD growth depends on installment dates.</td></tr>";
+    }
+
+    // --- TAX CALCULATION ---
+    let tds = 0;
+    if(acc === 'NRO') {
+        tds = grossInt * 0.312; // Flat 31.2% for NRO
+    } else if(acc === 'DOM') {
+        let limit = (age === 'SR' || age === 'SSR') ? 50000 : 40000;
+        if(grossInt > limit && taxDoc !== 'FORM_YES') {
+            tds = (taxDoc === 'PAN_YES') ? grossInt * 0.10 : grossInt * 0.20;
+        }
+    }
+
+    // --- DISPLAY ---
+    document.getElementById('res_roi').innerText = rate.toFixed(2) + "%";
+    document.getElementById('res_gross').innerText = "₹" + Math.round(grossInt).toLocaleString('en-IN');
+    document.getElementById('res_tds').innerText = "- ₹" + Math.round(tds).toLocaleString('en-IN');
+    document.getElementById('res_net').innerText = "₹" + Math.round(maturity - tds).toLocaleString('en-IN');
+    document.getElementById('res_si').innerText = "₹" + Math.round(si).toLocaleString('en-IN');
+    document.getElementById('res_ci').innerText = "₹" + Math.round(grossInt).toLocaleString('en-IN');
+    document.getElementById('res_gain').innerText = "₹" + Math.round(grossInt - si).toLocaleString('en-IN');
+    document.getElementById('breakup_body').innerHTML = tableRows;
+    document.getElementById('resultArea').classList.remove('d-none');
+}
+</script>
+</body>
+</html>
