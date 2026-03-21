@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APY Official Calculator & Report</title>
+    <link rel="icon" href="./canara.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #1e3799; --secondary: #f39c12; --success: #2ecc71; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f1f2f6; }
+        .hero { background: var(--primary); color: white; padding: 40px 0; border-bottom: 5px solid var(--secondary); }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-print { background: #009432; color: white; border: none; margin-top: 15px; padding: 10px 25px; }
+        .btn-print:hover { background: #006322; color: white; }
+        .table thead { background: #2f3542; color: white; }
+        .tax-section { background: #fff; border-left: 5px solid var(--success); }
+        
+        @media print {
+            .no-print, .hero, .input-area { display: none !important; }
+            .container { width: 100% !important; max-width: 100% !important; }
+            .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero text-center no-print">
+    <div class="container">
+        <h1>Atal Pension Yojana (APY) Smart Advisor</h1>
+        <p>Official Govt. Rates & Tax Benefits (Sec 80C)</p>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <div class="row justify-content-center input-area">
+        <div class="col-md-6 text-center">
+            <div class="card p-4">
+                <h5 class="mb-3">Apni Age Chunein</h5>
+                <select id="ageSelect" class="form-select form-select-lg mb-3"></select>
+                <button onclick="calculate()" class="btn btn-primary btn-lg w-100 fw-bold">Detailed Report Dekhein</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportArea" class="mt-4" style="display:none;">
+        <div class="card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h3 class="text-primary">Investment & Pension Report</h3>
+                <button onclick="window.print()" class="btn btn-print no-print">📄 Print / Save PDF</button>
+            </div>
+            
+            <p>Aapki Umr: <b><span id="resAge"></span> Saal</b> | Investment Period: <b><span id="resYears"></span> Saal (60 ki umr tak)</b></p>
+            
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered text-center align-middle">
+                    <thead>
+                        <tr>
+                            <th>Pension Amount</th>
+                            <th>Monthly Premium</th>
+                            <th>Yearly Jama</th>
+                            <th>Total Investment</th>
+                            <th>Nominee Corpus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableData"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card p-4 h-100 bg-white">
+                    <h5 class="text-success">⭐ 1,000 vs 5,000 ka Antar</h5>
+                    <p id="analysisText" class="small text-muted"></p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-4 h-100 tax-section">
+                    <h5 class="text-primary">📝 Tax & Nominee Rules</h5>
+                    <ul class="small">
+                        <li><b>Section 80C:</b> Aapka har saal ka premium Tax-Free hai.</li>
+                        <li><b>Death Benefit:</b> Subscriber ke baad Spouse ko pension, uske baad Nominee ko poora paisa.</li>
+                        <li><b>Govt Guarantee:</b> Market kitna bhi gire, pension fix rahegi.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card p-4 mt-3 bg-light text-center no-print">
+            <h5>💡 RD vs APY Prediction</h5>
+            <p id="rdComparison" class="mb-0"></p>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center py-4 text-muted small">
+    Data Source: PFRDA Official APY Chart 2026.
+</footer>
+
+<script>
+const apyRates = {
+    18:[42,84,126,168,210], 19:[46,92,138,183,228], 20:[50,100,150,198,248], 21:[54,108,162,215,269],
+    22:[59,117,177,234,292], 23:[64,127,192,253,318], 24:[70,139,208,276,346], 25:[76,151,226,301,376],
+    26:[82,164,246,327,409], 27:[90,178,268,356,446], 28:[97,194,292,388,485], 29:[106,212,318,423,529],
+    30:[116,231,347,462,577], 31:[126,252,379,504,630], 32:[138,276,414,551,689], 33:[151,302,453,602,752],
+    34:[165,330,495,659,824], 35:[181,362,543,722,902], 36:[198,396,594,792,990], 37:[218,436,654,870,1087],
+    38:[240,480,720,957,1196], 39:[264,528,792,1054,1318], 40:[291,582,873,1164,1454]
+};
+const corpus = [170000, 340000, 510000, 680000, 850000];
+
+const sel = document.getElementById('ageSelect');
+for(let i=18; i<=40; i++) {
+    let o = document.createElement('option');
+    o.value = i; o.innerText = i + " Saal";
+    sel.appendChild(o);
+}
+
+function calculate() {
+    const age = parseInt(sel.value);
+    const years = 60 - age;
+    const premiums = apyRates[age];
+    
+    document.getElementById('resAge').innerText = age;
+    document.getElementById('resYears').innerText = years;
+    
+    let html = "";
+    premiums.forEach((p, i) => {
+        let yearly = p * 12;
+        let total = yearly * years;
+        html += `<tr>
+            <td><b>₹${(i+1)*1000}</b></td>
+            <td>₹${p}</td>
+            <td>₹${yearly.toLocaleString()}</td>
+            <td>₹${total.toLocaleString()}</td>
+            <td class="text-success">₹${corpus[i].toLocaleString()}</td>
+        </tr>`;
+    });
+    
+    document.getElementById('tableData').innerHTML = html;
+    
+    // Analysis
+    const diffMonth = premiums[4] - premiums[0];
+    const diffTotal = (premiums[4] * 12 * years) - (premiums[0] * 12 * years);
+    document.getElementById('analysisText').innerHTML = `₹5,000 pension ke liye aapko ₹1,000 wale plan se sirf <b>₹${diffMonth} monthly</b> zyada dena hai. Poore safar mein aap ₹${diffTotal.toLocaleString()} extra jama karenge, lekin budhape mein har mahine ₹4,000 extra pension payenge.`;
+    
+    const total5k = premiums[4] * 12 * years;
+    document.getElementById('rdComparison').innerHTML = `Agar aap ₹5,000 pension ke liye Bank RD karte hain, toh aapko lagbhag <b>₹12 Lakh</b> ka fund chahiye hoga. APY mein aap sirf <b>₹${total5k.toLocaleString()}</b> jama karke wahi suvidha paa rahe hain. <b>Paisa Vasool Scheme!</b>`;
+    
+    document.getElementById('reportArea').style.display = "block";
+    window.scrollTo({top: 500, behavior: 'smooth'});
+}
+</script>
+</body>
+</html>

@@ -152,7 +152,6 @@
                             <ul class="small ps-3">
                                 <li><b>Senior Citizens:</b> 180 Days & above par extra <b>0.50%</b> interest.</li>
                                 <li><b>Super Seniors (80+):</b> Sirf "Canara 444" aur "Canara 555" par extra <b>0.60%</b> milta hai.</li>
-                                <li><b>Non-Callable:</b> ₹1 Cr se upar ke deposits par premature allowed nahi hai par interest rates zyada hain.</li>
                             </ul>
                         </div>
                         <div class="col-md-4">
@@ -211,16 +210,16 @@ function masterCalculate() {
         else if(days <= 269) rate = 5.25;
         else if(days <= 364) rate = 5.50;
         else if(days === 365) rate = 6.25;
-        else if(days === 444) rate = 6.45;
-        else if(days === 555) rate = 6.50;
+        else if(days === 444) rate = 6.50;
+        else if(days === 555) rate = 6.60;
     } else {
         // Non-Callable
         if(days <= 90) rate = 4.10;
         else if(days <= 179) rate = 4.35;
         else if(days <= 269) rate = 5.35;
         else if(days <= 364) rate = 5.60;
-        else if(days === 444) rate = 6.55;
-        else if(days === 555) rate = 6.60;
+        else if(days === 444) rate = 6.60;
+        else if(days === 555) rate = 6.70;
         else rate = 6.35;
     }
 
